@@ -14,6 +14,10 @@ def get_fruit_load_list():
         my_cur.execute("SELECT * FROM fruit_load_list")
         return my_cur.fetchall()
 
+def insert_row_snowflake(new_fruit):
+    with my_cnx() as my_cur:
+        my_cur.execute(f"INSERT INTO fruit_load_list VALUES ({add_my_fruit})")
+        return "Thanks for adding " + new_fruit
 
 my_fruit_list = pandas.read_csv('https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt')
 my_fruit_list = my_fruit_list.set_index('Fruit')
@@ -54,10 +58,9 @@ if streamlit.button("Get Fruit Load List"):
     my_data_rows = get_fruit_load_list()
     streamlit.dataframe(my_data_rows)
 
-streamlit.stop()
-
 # add fruit
 add_my_fruit = streamlit.text_input('What fruit would you like to add?')
-streamlit.write('The user entered ', add_my_fruit)
-streamlit.text(f'Thanks for adding '+add_my_fruit)
-my_cur.execute(f"INSERT INTO fruit_load_list VALUES ({add_my_fruit})")
+if streamlit.button("Add a Fruit to the List"):
+    my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+    output = insert_row_snowflake(add_my_fruit)
+    streamlit.text(output)
